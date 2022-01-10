@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>記帳系統</title>
+ 
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+    <script>
+var db;
+
+function init()
+{
+   if (!window.indexedDB) 
+    {
+        alert("No Indexed DB support");
+        return;
+    }
+    var request = window.indexedDB.open("myDB",1);
+    
+    request.onerror = function(event) {
+        alert("耶！？開啟資料庫失敗!");
+    };
+    request.onsuccess = function(event) {
+        db = request.result;
+        slist();
+    };
+
+   request.onupgradeneeded = function (evt) {                  
+    var objectStore = evt.currentTarget.result.createObjectStore("account", { keyPath: "id", autoIncrement: true });
+    objectStore.createIndex("date", "date", { unique: false });
+    objectStore.createIndex("sel", "sel", { unique: false });
+    objectStore.createIndex("dcb", "dcb", { unique: false });
+    objectStore.createIndex("prc", "prc", { unique: false });    
+    };
+    
+}
+function add()
+{
+    if (!window.indexedDB) 
+    {
+        alert("No Indexed DB support");
+        return;
+    }
+    var tr=db.transaction(["account"], "readwrite");//建立或存取物件 account
+    var objectStore = tr.objectStore("account");
+    var account=[];
+    account["date"]=document.getElementById("date").value;
+    account["sel"]=document.getElementById("sel").value;
+    account["dcb"]=document.getElementById("dcb").value;
+    account["prc"]=document.getElementById("prc").value;
+    var request = objectStore.add(account);
+    request.onsuccess = function(event) {
+        document.getElementById("state").innerHTML="新增成功"
+    };  
+}
+
+function slist(){
+    if (!window.indexedDB) 
+    {
+        alert("No Indexed DB support");
+        return;
+    }
+
+    var cursor=db.transaction(["account"], "readonly").objectStore("account").getAll(); 
+    cursor.onsuccess = function(event) {
+
+    all= event.target.result;
+    total=event.target.result.length;
+    
+  
+                var text="";
+                for(i=0;i<total;i++)
+                {
+                    text +="<tr><td>"+all[i].date+"</td><td>"+all[i].sel+"</td><td>"+all[i].dcb+"</td><td>"+all[i].prc+"</td></tr>";  
+                }
+                //console.log('成功',text); 
+                var Con=document.getElementById('con');
+                document.getElementById("con").innerHTML = text;
+                if(total!=0){
+                    document.getElementById("state").innerHTML="更新成功"
+                }
+                
+}
+};
+
+    </script>
+</head>
+
+<body onload="init()">
+<div class="alert alert-info text-center" role="alert">
+    <h1 id = "Name" >記帳本本</h1>
+</div>
+<br>
+<div class="container">
+    <div class="row">
+        <div class="col offset-md-2">
+        <input name ="date" id="date" type="date"style="font-size:18px" value="2022-01-10" >  
+        </div>
+        <div class="col" >
+            <select class="form-control" id="sel" name="sel">
+                <option value="食物">食物</option>
+                <option value="交通">交通</option>
+                <option value="娛樂">娛樂</option>
+                <option value="學習">學習</option>
+                <option value="醫療">醫療</option>
+                <option value="其他">其他</option>
+            </select>
+        </div>
+        <div class="col-3">
+            <input class="form-control" type="text" name="dcb" id="dcb"placeholder="描述">
+        </div>
+        <div class="col-2">
+            <input class="form-control" type="text" name="prc" id ="prc"placeholder="價格">
+        </div>
+    </div>
+</div>
+<br>
+<div class="text-center"><button  onclick="add()" class="btn btn-outline-primary">新增</button></div>
+<br>
+  <div class="text-center" ><span style="font-size:18px;"class="badge badge-primary" name="state" id="state">ㅍ_ㅍ</span></div>
+
+<br>
+<div class="alert alert-success text-center" role="alert">
+    <h3 id = "data" >明細資料</h3>
+</div>
+<br>
+<div class="col offset-md-9"><button  onclick="slist()" class="btn btn-outline-primary">更新</button></div>
+<br>
+<div class="container">
+    <table border = 1 class="table  table-hover" id = "dip">
+        <thead class="thead-dark">
+            <tr>
+                <th width="20%">日期</th>
+                <th width="20%">類別</th>
+                <th>描述</th>
+                <th width="20%">價錢</th>
+            </tr>
+        </thead>
+        <tbody id="con">
+            
+        </tbody>
+</div>
+
+
+</body>
+</html>
